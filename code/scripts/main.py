@@ -12,42 +12,44 @@ from matplotlib import figure as fig
 import time
 from numpy.random import uniform
 
+
 def visualize_map(occupancy_map):
-    fig = plt.figure()
-    # plt.switch_backend('TkAgg')
-    mng = plt.get_current_fig_manager();  # mng.resize(*mng.window.maxsize())
-    plt.ion(); plt.imshow(occupancy_map, cmap='Greys'); plt.axis([0, 800, 0, 800]);
+    plt.figure()
+    plt.get_current_fig_manager()
+    plt.ion()
+    plt.imshow(occupancy_map, cmap='Greys')
+    plt.axis([0, 800, 0, 800])
 
 
-def visualize_timestep(X_bar, tstep):
-    x_locs = X_bar[:,0]/10.0
-    y_locs = X_bar[:,1]/10.0
-    scat = plt.scatter(x_locs, y_locs, c='r', marker='o', markersize=2)
+def visualize_timestep(X_bar):
+    x_locs = X_bar[:, 0] / 10.0
+    y_locs = X_bar[:, 1] / 10.0
+    scat = plt.scatter(x_locs, y_locs, c='r', marker='o')
     plt.pause(0.00001)
     scat.remove()
 
-def init_particles_random(num_particles, occupancy_map):
 
+def init_particles_random(num_particles, occupancy_map):
     # initialize [x, y, theta] positions in world_frame for all particles
-    y0_vals = np.random.uniform( 0, 7000, (num_particles, 1) )
-    x0_vals = np.random.uniform( 3000, 7000, (num_particles, 1) )
-    theta0_vals = np.random.uniform( -3.14, 3.14, (num_particles, 1) )
+    y0_vals = np.random.uniform(0, 7000, (num_particles, 1))
+    x0_vals = np.random.uniform(3000, 7000, (num_particles, 1))
+    theta0_vals = np.random.uniform(-3.14, 3.14, (num_particles, 1))
 
     # initialize weights for all particles
-    w0_vals = np.ones( (num_particles,1), dtype=np.float64)
+    w0_vals = np.ones((num_particles, 1), dtype=np.float64)
     w0_vals = w0_vals / num_particles
 
-    X_bar_init = np.hstack((x0_vals,y0_vals,theta0_vals,w0_vals))
-    
+    X_bar_init = np.hstack((x0_vals, y0_vals, theta0_vals, w0_vals))
+
     return X_bar_init
 
-def init_particles_freespace(num_particles, occupancy_map):
 
+def init_particles_freespace(num_particles, occupancy_map):
     # initialize [x, y, theta] positions in world_frame for all particles
 
     """
     TODO : Add your code here
-    """ 
+    """
     X_bar_init = []
     w0_vals = 1 / num_particles
     for i in range(0, num_particles):
@@ -61,20 +63,21 @@ def init_particles_freespace(num_particles, occupancy_map):
         X_bar_init.append(np.array([y * 10, x * 10, theta, w0_vals]))
     return np.asarray(X_bar_init)
 
+
 def plot_map(occupancy_map, X_bar):
-    walls = []	
+    walls = []
     for i in range(0, occupancy_map.shape[0]):
         for j in range(0, occupancy_map.shape[1]):
             if occupancy_map[i, j] != 0:
-                walls.append([j * 10 , i * 10])
+                walls.append([j * 10, i * 10])
     walls = np.asarray(walls)
     X_bar = np.asarray(X_bar)
     plt.plot(walls[:, 0], walls[:, 1], 'bo', markersize=1)
     plt.plot(X_bar[:, 0], X_bar[:, 1], 'ro', markersize=1)
     plt.show()
 
-def main():
 
+def main():
     """
     Description of variables used
     u_t0 : particle state odometry reading [x, y, theta] at time (t-1) [odometry_frame]   
@@ -92,17 +95,36 @@ def main():
     src_path_log = '../data/log/robotdata1.log'
 
     map_obj = MapReader(src_path_map)
-    occupancy_map = map_obj.get_map() 
+    occupancy_map = map_obj.get_map()
     logfile = open(src_path_log, 'r')
 
     motion_model = MotionModel()
-    sensor_model = SensorModel(occupancy_map)
+    params = {
+        'z_max': 8183,
+        'lambda_short': 0.01,
+        'sigma_hit': 250,
+
+        'z_pHit': 1000,
+        'z_pShort': 0.01,
+        'z_pMax': 0.03,
+        'z_pRand': 100000,
+
+        'laser_sensor_offset': 25.0,
+        'ray_step_size': 2,
+        'grid_size': 10,
+        'occ_thrsh': 0.1,
+        'laser_subsample': 30,
+
+        'rayCast_vis': False,
+        'map_vis': True
+    }
+    sensor_model = SensorModel(occupancy_map, params)
     resampler = Resampling()
 
     num_particles = 100
     X_bar = init_particles_freespace(num_particles, occupancy_map)
     vis_flag = 1
-    
+
     """
     Monte Carlo Localization Algorithm : Main Loop
     """
@@ -113,19 +135,20 @@ def main():
     for time_idx, line in enumerate(logfile):
 
         # Read a single 'line' from the log file (can be either odometry or laser measurement)
-        meas_type = line[0] # L : laser scan measurement, O : odometry measurement
-        meas_vals = np.fromstring(line[2:], dtype=np.float64, sep=' ') # convert measurement values from string to double
+        meas_type = line[0]  # L : laser scan measurement, O : odometry measurement
+        meas_vals = np.fromstring(line[2:], dtype=np.float64,
+                                  sep=' ')  # convert measurement values from string to double
 
-        odometry_robot = meas_vals[0:3] # odometry reading [x, y, theta] in odometry frame
+        odometry_robot = meas_vals[0:3]  # odometry reading [x, y, theta] in odometry frame
         time_stamp = meas_vals[-1]
 
         # if ((time_stamp <= 0.0) | (meas_type == "O")): # ignore pure odometry measurements for now (faster debugging) 
             # continue
 
         if (meas_type == "L"):
-             odometry_laser = meas_vals[3:6] # [x, y, theta] coordinates of laser in odometry frame
-             ranges = meas_vals[6:-1] # 180 range measurement values from single laser scan
-        
+            odometry_laser = meas_vals[3:6]  # [x, y, theta] coordinates of laser in odometry frame
+            ranges = meas_vals[6:-1]  # 180 range measurement values from single laser scan
+
         print("Processing time step " + str(time_idx) + " at time " + str(time_stamp) + "s")
 
         if (first_time_idx):
@@ -133,7 +156,7 @@ def main():
             first_time_idx = False
             continue
 
-        X_bar_new = np.zeros( (num_particles,4), dtype=np.float64)
+        X_bar_new = np.zeros((num_particles, 4), dtype=np.float64)
         u_t1 = odometry_robot
         for m in range(0, num_particles):
 
@@ -150,10 +173,10 @@ def main():
                 z_t = ranges
                 w_t = sensor_model.beam_range_finder_model(z_t, x_t1)
                 # w_t = 1/num_particles
-                X_bar_new[m,:] = np.hstack((x_t1, w_t))
+                X_bar_new[m, :] = np.hstack((x_t1, w_t))
             else:
-                X_bar_new[m,:] = np.hstack((x_t1, X_bar[m,3]))
-        
+                X_bar_new[m, :] = np.hstack((x_t1, X_bar[m, 3]))
+
         X_bar = X_bar_new
         u_t0 = u_t1
 
@@ -166,5 +189,6 @@ def main():
         if vis_flag:
             visualize_timestep(X_bar, time_idx)
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     main()
