@@ -49,6 +49,7 @@ def init_particles_freespace(num_particles, occupancy_map):
     TODO : Add your code here
     """ 
     X_bar_init = []
+    w0_vals = 1 / num_particles
     for i in range(0, num_particles):
         x = int(uniform(0, 800))
         y = int(uniform(0, 800))
@@ -57,8 +58,8 @@ def init_particles_freespace(num_particles, occupancy_map):
             x = int(uniform(0, 800))
             y = int(uniform(0, 800))
             theta = uniform(-np.pi, np.pi)
-        X_bar_init.append(np.array([x * 10, y * 10, theta]))
-    return X_bar_init
+        X_bar_init.append(np.array([x * 10, y * 10, theta, w0_vals]))
+    return np.asarray(X_bar_init)
 
 def plot_map(occupancy_map, X_bar):
     walls = []
