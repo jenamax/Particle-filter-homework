@@ -66,7 +66,7 @@ def plot_map(occupancy_map, X_bar):
     for i in range(0, occupancy_map.shape[0]):
         for j in range(0, occupancy_map.shape[1]):
             if occupancy_map[i, j] != 0:
-                walls.append([i * 10 , j * 10])
+                walls.append([j * 10 , i * 10])
     walls = np.asarray(walls)
     X_bar = np.asarray(X_bar)
     plt.plot(walls[:, 0], walls[:, 1], 'bo', markersize=1)
