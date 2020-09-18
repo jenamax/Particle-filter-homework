@@ -21,9 +21,10 @@ def visualize_map(occupancy_map):
 
 
 def visualize_raycast(ray):
-    x_locs = [x[0] for x in ray]
-    y_locs = [x[1] for x in ray]
-    scat = plt.scatter(x_locs, y_locs, c='r', marker='o')
+    x_locs = [x[0] / 10 for x in ray]
+    y_locs = [x[1] / 10 for x in ray]
+    print(x_locs, y_locs)
+    scat = plt.scatter(x_locs, y_locs, c='r', marker='o', s=2)
     plt.pause(0.1)
     scat.remove()
 
@@ -167,7 +168,7 @@ if __name__ == '__main__':
     logfile = open(src_path_log, 'r')
 
     sensor_model = SensorModel(occupancy_map)
-    vis_flag = 0
+    vis_flag = 1
 
     """
     Monte Carlo Localization Algorithm : Main Loop
@@ -178,28 +179,11 @@ if __name__ == '__main__':
     first_time_idx = True
     X_bar = np.array([4600, 2030, 0])
     scan_points = [np.array([0, 0])]
-
-    walls = []
-    for i in range(0, sensor_model.occupancy_map.shape[0]):
-        for j in range(0, sensor_model.occupancy_map.shape[1]):
-            if sensor_model.occupancy_map[i, j] != 0:
-                walls.append([j * 10 , i * 10])
-    walls = np.asarray(walls)
-
-    #plt.show()
- 
-    axes = plt.gca()
-    axes.set_xlim(0, 8000)
-    axes.set_ylim(0, 8000)
-    
-    plt.plot(X_bar[0], X_bar[1], 'go', markersize=3)
-    plt.plot(np.asarray(walls)[:, 0], np.asarray(walls)[:, 1], 'bo', markersize=1)
-
     x_t1 = X_bar
     z_s = []
     for i in range(-90, 90):
         z_s.append(sensor_model.ray_cast(x_t1, i))
     pc = sensor_model.get_point_cloud(X_bar, z_s)
-    plt.plot(np.asarray(pc)[:, 0], np.asarray(pc)[:, 1], 'ro', markersize=2)
-    plt.show()
+    visualize_raycast(pc)
+    time.sleep(10)
 

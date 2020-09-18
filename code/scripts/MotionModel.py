@@ -15,10 +15,10 @@ class MotionModel:
         Initializing of Motion Model parameters here
         """
 
-        self.a1 = 0.1
-        self.a2 = 0.1
-        self.a3 = 0.1
-        self.a4 = 0.1
+        self.a1 = 0.0001
+        self.a2 = 0.0001
+        self.a3 = 0.0001
+        self.a4 = 0.0001
 
     def update(self, u_t0, u_t1, x_t0):
 
