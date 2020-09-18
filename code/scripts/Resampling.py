@@ -19,10 +19,14 @@ class Resampling:
         param[in] X_bar : [num_particles x 4] sized array containing [x, y, theta, wt] values for all particles
         param[out] X_bar_resampled : [num_particles x 4] sized array containing [x, y, theta, wt] values for resampled set of particles
         """
+        # X_bar_resampled = resampler.multinomial_sampler(X_bar)
+        self.normalization_(X_bar)
+        num_particles = np.shape(X_bar)[0]
+        X_bar_resampled = np.zeros([num_particles, 4])
 
-        """
-        TODO : Add your code here
-        """
+        for i in range(num_particles):
+            x_bar_index = np.random.choice(num_particles, p=X_bar[:, 3])
+            X_bar_resampled[i, :] = X_bar[x_bar_index, :]
 
         return X_bar_resampled
 
