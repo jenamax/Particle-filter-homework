@@ -100,9 +100,9 @@ def main():
 
     motion_model = MotionModel()
     params = {
-        'z_max': 5000,
+        'z_max': 8000,
         'lambda_short': 0.1,
-        'sigma_hit': 2,
+        'sigma_hit': 20,
 
         'z_pHit': 0.95,
         'z_pShort': 0.01,
@@ -121,7 +121,7 @@ def main():
     sensor_model = SensorModel(occupancy_map, params)
     resampler = Resampling()
 
-    num_particles = 500
+    num_particles = 1500
     X_bar = init_particles_freespace(num_particles, occupancy_map)
     vis_flag = 1
 
@@ -184,8 +184,6 @@ def main():
         RESAMPLING
         """
         X_bar = resampler.low_variance_sampler(X_bar)
-        print(len(X_bar))
-
         if vis_flag:
             visualize_timestep(X_bar)
 

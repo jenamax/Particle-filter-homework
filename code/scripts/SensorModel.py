@@ -57,11 +57,6 @@ class SensorModel:
         if sft_chk > 0.4 or sft_chk == -1:
             return 1e-100
 
-        """ rayCast visualization using legacy code """
-        if self.rayCast_vis:
-            measurements = z_t1_arr[::self.laser_subsample_factor]
-            z_true = self.rayCast_legacy(measurements, x_t1, self.occupancy_map)
-
         q = 0
 
         laser_x, laser_y = self.laser_sensor_offset * np.cos(theta), self.laser_sensor_offset * np.sin(theta)
@@ -134,50 +129,6 @@ class SensorModel:
         else:
             return 0.0
 
-    def rayCast_legacy(self, measurements, x_t1, occupancy_map):
-        """
-        param[in] measurements : laser range readings [array of 180 values] at time t
-        param[in] x_t1 : particle state belief [x, y, theta] at time t [world_frame]
-        param[in] occupancy_map: map of the environment
-        param[out] z_true: true laser range readings retrieved using ray tracing
-        """
-
-        """ x, y  -- location of laser in cm """
-        """ theta -- orientation of laser in radians """
-        x, y, theta = x_t1
-        laser_coord_x, laser_coord_y = x + (self.laser_sensor_offset) * np.cos(theta), y + (
-            self.laser_sensor_offset) * np.sin(theta)
-
-        """ Generate samples with which to carry out ray tracing """
-        rays_counterclockwise = list(np.arange(0, 180, self.laser_subsample_factor) * np.pi / 180 - np.pi / 2 + theta)
-
-        if len(rays_counterclockwise) != len(measurements):
-            print('Can not match the number of measurement and true range.')
-            exit(1)
-
-        """ Carry out ray tracing """
-        z_true = []
-
-        for idx, heading in enumerate(rays_counterclockwise):
-            succeeded_distance_x, succeeded_distance_y = np.copy(laser_coord_x), np.copy(laser_coord_y)
-
-            true_range = 0
-
-            ray_succeeded = np.array([self.ray_step_size * np.cos(heading),
-                                      self.ray_step_size * np.sin(
-                                          heading)])  # a pair of unit proceedings in x and y directions
-
-            while true_range <= self.z_max and not self.collision_check(occupancy_map, \
-                                                                        succeeded_distance_x, \
-                                                                        succeeded_distance_y):
-                succeeded_distance_x += ray_succeeded[0]
-                succeeded_distance_y += ray_succeeded[1]
-                true_range += self.ray_step_size
-            fails = True if true_range > self.z_max else False
-            z_true.append((fails, true_range))
-        self.plot_rayCast(laser_coord_x, laser_coord_y, rays_counterclockwise, z_true)
-
-        return z_true
 
     def collision_check(self, occupancy_map, succeeded_distance_x, succeeded_distance_y):
         succeeded_distance_index_x = int(succeeded_distance_x // self.grid_size)
@@ -228,14 +179,14 @@ class SensorModel:
 if __name__ == '__main__':
     src_path_map = '../data/map/wean.dat'
     params = {
-        'z_max': 8183,
-        'lambda_short': 0.01,
-        'sigma_hit': 250,
+        'z_max': 8000,
+        'lambda_short': 0.1,
+        'sigma_hit': 2,
 
-        'z_pHit': 1000,
+        'z_pHit': 0.95,
         'z_pShort': 0.01,
-        'z_pMax': 0.03,
-        'z_pRand': 100000,
+        'z_pMax': 0.05,
+        'z_pRand': 0.05,
 
         'laser_sensor_offset': 25.0,
         'ray_step_size': 2,
