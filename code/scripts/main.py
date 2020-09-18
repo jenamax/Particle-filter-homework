@@ -24,7 +24,7 @@ def visualize_map(occupancy_map):
 def visualize_timestep(X_bar):
     x_locs = X_bar[:, 0] / 10.0
     y_locs = X_bar[:, 1] / 10.0
-    scat = plt.scatter(x_locs, y_locs, c='r', marker='o')
+    scat = plt.scatter(x_locs, y_locs, c='r', marker='o', s=3)
     plt.pause(0.00001)
     scat.remove()
 
@@ -92,7 +92,7 @@ def main():
     Initialize Parameters
     """
     src_path_map = '../data/map/wean.dat'
-    src_path_log = '../data/log/robotdata1.log'
+    src_path_log = '../data/log/robotdata2.log'
 
     map_obj = MapReader(src_path_map)
     occupancy_map = map_obj.get_map()
@@ -187,7 +187,7 @@ def main():
         print(len(X_bar))
 
         if vis_flag:
-            visualize_timestep(X_bar, time_idx)
+            visualize_timestep(X_bar)
 
 
 if __name__ == "__main__":

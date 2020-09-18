@@ -8,23 +8,6 @@ import pdb
 from MapReader import MapReader
 
 
-def visualize_map(occupancy_map):
-    fig = plt.figure()
-    mng = plt.get_current_fig_manager()
-    plt.ion()
-    plt.imshow(occupancy_map, cmap='Greys')
-    plt.axis([0, 800, 0, 800])
-
-
-def visualize_raycast(ray):
-    x_locs = [x[0] / 10 for x in ray]
-    y_locs = [x[1] / 10 for x in ray]
-    print(x_locs, y_locs)
-    scat = plt.scatter(x_locs, y_locs, c='r', marker='o', s=2)
-    plt.pause(0.1)
-    scat.remove()
-
-
 class SensorModel:
     """
     References: Thrun, Sebastian, Wolfram Burgard, and Dieter Fox. Probabilistic robotics. MIT press, 2005.
