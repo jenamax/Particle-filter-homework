@@ -99,7 +99,7 @@ def main():
     sensor_model = SensorModel(occupancy_map)
     resampler = Resampling()
 
-    num_particles = 500
+    num_particles = 100
     X_bar = init_particles_freespace(num_particles, occupancy_map)
     vis_flag = 1
     
@@ -161,6 +161,7 @@ def main():
         RESAMPLING
         """
         X_bar = resampler.low_variance_sampler(X_bar)
+        print(len(X_bar))
 
         if vis_flag:
             visualize_timestep(X_bar, time_idx)
