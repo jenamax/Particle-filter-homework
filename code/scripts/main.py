@@ -13,6 +13,10 @@ import time
 from numpy.random import uniform
 
 
+
+t = 77
+np.random.seed(t)
+
 def visualize_map(occupancy_map):
     plt.figure()
     plt.get_current_fig_manager()
