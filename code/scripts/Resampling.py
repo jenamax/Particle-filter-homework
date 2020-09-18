@@ -11,6 +11,7 @@ class Resampling:
         """
         TODO : Initialize resampling process parameters here
         """
+        self.trheshold_believe = 0.5
 
     def multinomial_sampler(self, X_bar):
 
@@ -36,7 +37,7 @@ class Resampling:
         M = len(X_bar)
         wt = X_bar[:,3]
         r = random.uniform(0, 1.0/M)
-        wt /= wt.sum()
+        wt = self.normalization_(wt)
         c = wt[0]
         i = 0
         for m in range(M):
@@ -48,6 +49,13 @@ class Resampling:
         X_bar_resampled = np.asarray(X_bar_resampled)
 
         return X_bar_resampled
+
+    def normalization_(self, weights):
+
+        normalizer = np.sum(weights)
+        if normalizer < self.trheshold_believe:
+          print ('Total belief on the observed data is less than {0}.'.format(self.trheshold_believe))
+        return weights / normalizer
 
 
 if __name__ == "__main__":
