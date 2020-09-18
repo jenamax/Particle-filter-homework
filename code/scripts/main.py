@@ -92,7 +92,7 @@ def main():
     Initialize Parameters
     """
     src_path_map = '../data/map/wean.dat'
-    src_path_log = '../data/log/robotdata2.log'
+    src_path_log = '../data/log/robotdata1.log'
 
     map_obj = MapReader(src_path_map)
     occupancy_map = map_obj.get_map()
@@ -100,14 +100,14 @@ def main():
 
     motion_model = MotionModel()
     params = {
-        'z_max': 8183,
-        'lambda_short': 0.01,
-        'sigma_hit': 250,
+        'z_max': 5000,
+        'lambda_short': 0.1,
+        'sigma_hit': 2,
 
-        'z_pHit': 1000,
+        'z_pHit': 0.95,
         'z_pShort': 0.01,
-        'z_pMax': 0.03,
-        'z_pRand': 100000,
+        'z_pMax': 0.05,
+        'z_pRand': 0.05,
 
         'laser_sensor_offset': 25.0,
         'ray_step_size': 2,
@@ -121,7 +121,7 @@ def main():
     sensor_model = SensorModel(occupancy_map, params)
     resampler = Resampling()
 
-    num_particles = 100
+    num_particles = 500
     X_bar = init_particles_freespace(num_particles, occupancy_map)
     vis_flag = 1
 

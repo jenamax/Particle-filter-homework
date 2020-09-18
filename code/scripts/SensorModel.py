@@ -4,6 +4,7 @@ import time
 from matplotlib import pyplot as plt
 from scipy.stats import norm
 import pdb
+from numpy import sin, cos
 
 from MapReader import MapReader
 
@@ -213,6 +214,56 @@ class SensorModel:
             plt.plot([x_start, x_dest], [y_start, y_dest], c=color, linewidth=1)
         plt.pause(0)
 
+    def get_pointcloud(self, X, scan):
+        rot = np.arange(-np.pi / 2, np.pi / 2, np.pi / 180)
+        scan_points = []
+        for i in range(0, len(scan)):
+            ang = X[2] + rot[i] 
+            x = X[0] + scan[i] * cos(ang)
+            y = X[1] + scan[i] * sin(ang) 
+            scan_points.append([x, y])
+        return np.asarray(scan_points)
+
 
 if __name__ == '__main__':
-    pass
+    src_path_map = '../data/map/wean.dat'
+    params = {
+        'z_max': 8183,
+        'lambda_short': 0.01,
+        'sigma_hit': 250,
+
+        'z_pHit': 1000,
+        'z_pShort': 0.01,
+        'z_pMax': 0.03,
+        'z_pRand': 100000,
+
+        'laser_sensor_offset': 25.0,
+        'ray_step_size': 2,
+        'grid_size': 10,
+        'occ_thrsh': 0.1,
+        'laser_subsample': 30,
+
+        'rayCast_vis': False,
+        'map_vis': True
+    }
+    map1 = MapReader(src_path_map)
+    occupancy_map = map1.get_map()
+    model = SensorModel(occupancy_map, params)
+
+    walls = []
+    for i in range(0, occupancy_map.shape[0]):
+        for j in range(0, occupancy_map.shape[1]):
+            if occupancy_map[i, j] != 0:
+                walls.append([j * 10, i * 10])
+    walls = np.asarray(walls)
+    plt.plot(walls[:, 0], walls[:, 1], 'bo', markersize=1)
+
+    X = np.array([4610, 2190, 0])
+    plt.plot(X[0], X[1], 'go')
+    rays = []
+    for i in range(-90, 90):
+        rays.append(model.rayCast(i, X[2], X[0] // 10, X[1] // 10))
+    pc = model.get_pointcloud(X, rays)
+    plt.plot(pc[:, 0], pc[:, 1], 'ro', markersize=2)
+    plt.show()
+
