@@ -23,7 +23,7 @@ class SensorModel:
         """
         self.occupancy_map = occupancy_map
 
-        self.laser_sensor_offset = params['laser_sensor_offset']  # From Piazza
+        self.laser_sensor_offset = params['laser_sensor_offset']
         self.ray_step_size = params['ray_step_size']  # Distance (in cm) used for forwarding procedure in ray-tracing
         self.grid_size = params['grid_size']  # Occupancy grid resolution (Parameter required for ray-tracing)
         self.thrsh = params['occ_thrsh']  # Threshold value required to check for occupancy/collision
@@ -47,11 +47,11 @@ class SensorModel:
         param[out] prob_zt1 : likelihood of a range scan zt1 at time t
         """
 
-        """ Sebastian Thurn, Probablistic Robotics -- Line 4 of Algorithm Table 6.1 """
-        """ Generate the ray cast solution to retrieve z_true """
+        # Algorithm Table 6.1
+        # Generate the ray cast solution to retrieve z_true
         x, y, theta = x_t1
 
-        """ Safety check """
+        # safety check
         sft_chk = self.occupancy_map[min(int(y / self.grid_size), self.occupancy_map.shape[0] - 1)] \
             [min(int(x / self.grid_size), self.occupancy_map.shape[1] - 1)]
         if sft_chk > 0.4 or sft_chk == -1:
@@ -69,7 +69,7 @@ class SensorModel:
 
             measure = z_t1_arr[samples_deg + 90]
 
-            """ Generate the 4 probability distributions -- Line 5 of Algorithm Table 6.1"""
+            # Line 5 of Algorithm Table 6.1
             p1 = self.z_pHit * self.p_hit(measure, x_t1, true_range)
             p2 = self.z_pShort * self.p_short(measure, x_t1, true_range)
             p3 = self.z_pMax * self.p_max(measure, x_t1)
@@ -129,7 +129,6 @@ class SensorModel:
         else:
             return 0.0
 
-
     def collision_check(self, occupancy_map, succeeded_distance_x, succeeded_distance_y):
         succeeded_distance_index_x = int(succeeded_distance_x // self.grid_size)
         succeeded_distance_index_y = int(succeeded_distance_y // self.grid_size)
@@ -169,15 +168,17 @@ class SensorModel:
         rot = np.arange(-np.pi / 2, np.pi / 2, np.pi / 180)
         scan_points = []
         for i in range(0, len(scan)):
-            ang = X[2] + rot[i] 
+            ang = X[2] + rot[i]
             x = X[0] + scan[i] * cos(ang)
-            y = X[1] + scan[i] * sin(ang) 
+            y = X[1] + scan[i] * sin(ang)
             scan_points.append([x, y])
         return np.asarray(scan_points)
 
 
 if __name__ == '__main__':
     src_path_map = '../data/map/wean.dat'
+
+    # Important stuff play with parameters
     params = {
         'z_max': 8000,
         'lambda_short': 0.1,
@@ -217,4 +218,3 @@ if __name__ == '__main__':
     pc = model.get_pointcloud(X, rays)
     plt.plot(pc[:, 0], pc[:, 1], 'ro', markersize=2)
     plt.show()
-
