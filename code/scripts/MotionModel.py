@@ -23,7 +23,7 @@ class MotionModel:
     def update(self, u_t0, u_t1, x_t0):
 
         """
-        param[in] u_t0 : particle state odometry reading [x, y, theta] at time (t-1) [odometry_frame]   
+        param[in] u_t0 : particle state odometry reading [x, y, theta] at time (t-1) [odometry_frame]
         param[in] u_t1 : particle state odometry reading [x, y, theta] at time t [odometry_frame]
         param[in] x_t0 : particle state belief [x, y, theta] at time (t-1) [world_frame]
         param[out] x_t1 : particle state belief [x, y, theta] at time t [world_frame]
@@ -49,22 +49,22 @@ class MotionModel:
         y_odom_ = u_t1[1]
         theta_odom_ = u_t1[2]
 
+        rot1 = math.atan2(y_odom_ - y_odom,x_odom_ - x_odom) - theta_odom
+        trasi = math.sqrt((x_odom-x_odom_)**2 + (y_odom-y_odom_)**2)
+        rot2 = theta_odom_ - theta_odom - rot1
 
-        phi_1 = math.atan2(y_odom_-y_odom, x_odom_-x_odom) - theta_odom
-        phi_trans = math.sqrt((x_odom-x_odom_)**2 + (y_odom-y_odom_)**2)
-        phi_2 = theta_odom_ - theta_odom - phi_1
+        rot1_ = rot1 - np.random.normal(0, np.sqrt((self.a1*(rot1**2)) + (self.a2*(trasi**2))))
+        trasi_ = trasi - np.random.normal(0,np.sqrt((self.a3*(trasi**2)) + (self.a4*(rot1**2)) + (self.a4*(rot2**2))))
+        rot2_ = rot2 - np.random.normal(0,np.sqrt((self.a1*(rot2**2)) + (self.a2*(trasi**2))))
 
-        phi_1_upper = phi_1 - self.sample(self.a1*phi_1 + self.a2*phi_trans)
-        phi_trans_upper = phi_trans - self.sample(self.a3*phi_trans + self.a4*(phi_1+phi_2))
-        phi_2_upper = phi_2 - self.sample(self.a1*phi_2 + self.a2*phi_trans)
 
-        X = x + phi_trans_upper * math.cos(theta+phi_1_upper)
-        Y = y + phi_trans_upper * math.sin(theta+phi_1_upper)
-        THETA = theta + phi_1_upper + phi_2_upper
-        x_t1 = np.array([X,Y,THETA])
+        x_ = x + trasi_*math.cos(x_t0[2] + rot1_)
+        y_ = y + trasi_*math.sin(x_t0[2] + rot1_)
+        theta_ = theta + rot1_ + rot2_
 
+
+        x_t1 = np.array([x_, y_, theta_])
         return x_t1
-
     # function sample(b) generates a random sample from a zero-centered distribution with variance b
     def sample(self, b, algorithm="normal"):
         if algorithm == "normal":
